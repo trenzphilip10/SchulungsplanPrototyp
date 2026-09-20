@@ -1,0 +1,678 @@
+[index.html](https://github.com/user-attachments/files/32440791/index.html)
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schulungsplanung Praxistest – KW 41-44</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg: #FAF8F4;
+    --panel: #FFFFFF;
+    --panel-soft: #FCFBF8;
+    --ink: #231F20;
+    --ink-soft: #5B5650;
+    --line: #E6E1D8;
+    --rust: #C04D20;
+    --rust-soft: #FBE9DC;
+    --hb-dark: #231F20;
+    --hb-orange: #F99D27;
+    --green: #3E5443;
+    --green-soft: #E4EAE3;
+    --amber: #B98A1E;
+    --amber-soft: #F6EDD8;
+    --info-soft: #DCE7F0;
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  :focus-visible{outline:2.5px solid var(--hb-orange); outline-offset:2px;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif; font-size:16px; line-height:1.45;
+    padding:0 0 80px;
+  }
+  .wrap{max-width:1220px;margin:0 auto; padding:0 20px;}
+
+  header.top{background:var(--hb-dark); border-bottom:4px solid var(--hb-orange); margin-bottom:28px; padding:22px 0 20px;}
+  header.top .top-inner{max-width:1220px; margin:0 auto; padding:0 20px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;}
+  .wordmark{font-family:'Barlow Condensed', sans-serif; font-weight:800; font-size:15px; letter-spacing:.08em; color:var(--hb-orange); margin:0 0 6px;}
+  header.top h1{font-family:'Barlow Condensed', sans-serif; font-size:28px; font-weight:700; color:#fff; margin:0 0 4px; letter-spacing:.01em; line-height:1.1;}
+  header.top .sub{color:#CFC9C0; font-size:13.5px;}
+  .badge-proto{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--hb-dark); background:var(--hb-orange); border-radius:var(--radius); padding:2px 7px; margin-left:8px; vertical-align:2px;}
+  .actions{display:flex; gap:8px; align-items:center;}
+  button{font-family:inherit; font-size:13.5px; font-weight:600; border-radius:var(--radius); padding:9px 16px; cursor:pointer; border:1.5px solid rgba(255,255,255,.35); background:transparent; color:#fff;}
+  button.primary{background:var(--hb-orange); color:var(--hb-dark); border-color:var(--hb-orange);}
+  button:hover{opacity:.85;}
+  .reload-label{font-size:12px; color:#CFC9C0; cursor:pointer; text-decoration:underline; margin-left:4px;}
+  #matrixFileInput{display:none;}
+  #reloadStatus{font-size:11.5px; color:var(--hb-orange); margin-top:4px;}
+
+  section{margin-bottom:28px;}
+  h2{font-family:'Barlow Condensed', sans-serif; font-size:16px; font-weight:700; letter-spacing:.01em; color:var(--ink); margin:0 0 10px; display:flex; align-items:center; gap:8px;}
+  h2::after{content:"";flex:1;height:1px;background:var(--line);}
+  .section-note{font-size:12px; color:var(--ink-soft); margin:-2px 0 12px;}
+
+  .week-tabs{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
+  .week-tab{
+    font-family:'Barlow Condensed', sans-serif; font-size:16px; font-weight:700;
+    padding:10px 20px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink-soft);
+    border-radius:var(--radius); cursor:pointer;
+  }
+  .week-tab .wt-range{display:block; font-family:'IBM Plex Sans'; font-size:10.5px; font-weight:500; margin-top:1px;}
+  .week-tab.active{background:var(--hb-dark); color:#fff; border-color:var(--hb-dark);}
+  .week-tab.active .wt-range{color:#CFC9C0;}
+
+  .ma-row{
+    display:grid;
+    grid-template-columns: 160px 150px 320px 110px 85px 60px 130px;
+    column-gap:14px; row-gap:6px; align-items:start; padding:14px 16px; min-height:165px;
+  }
+  .ma-toggle{display:flex; align-items:center; gap:8px; background:none; border:none; cursor:pointer; font:inherit; color:inherit; padding:0; overflow:hidden;}
+  .ma-toggle .ma-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .chev{display:inline-block; font-size:10px; color:var(--ink-soft); transition:transform .15s ease; flex-shrink:0;}
+  .ma-card.open .chev{transform:rotate(90deg);}
+  .ma-name{font-weight:600;}
+  .ma-card{border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); margin-bottom:8px; overflow:hidden;}
+  .ma-card.dauerkrank{opacity:.7;}
+
+  .schicht-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; padding:3px 7px; border-radius:var(--radius); background:var(--green-soft); color:var(--green); justify-self:start;}
+  .schicht-tag.aus{background:var(--rust-soft); color:var(--rust);}
+  .frei-tag{color:var(--ink-soft); font-size:12.5px; display:block; margin-top:5px;}
+
+  .field-group{display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .field-label{font-size:10px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft);}
+  .why{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+  .ansprechpartner{font-size:11px; color:var(--ink); margin-top:4px; font-weight:600; background:var(--info-soft); display:inline-block; padding:2px 7px; border-radius:var(--radius);}
+  .ansprechpartner:empty{margin-top:0; padding:0; background:none;}
+  .time-warn{font-size:10.5px; color:var(--rust); font-weight:600; margin-top:2px;}
+  .timeSelect.conflict{border-color:var(--rust); background:var(--rust-soft);}
+  .handname-line{border-bottom:1px solid var(--line); height:16px; margin-top:6px;}
+  .hand-field{margin-top:8px;}
+  .hand-label{font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); display:block;}
+  .hand-line{display:block; border-bottom:1px solid var(--line); height:40px;}
+  .sig-line{display:none;}
+
+  select{font-family:inherit; font-size:13.5px; padding:6px 8px; border-radius:var(--radius); border:1px solid var(--line); background:#fff; color:var(--ink); width:100%; overflow:hidden; text-overflow:ellipsis;}
+  select:disabled, input:disabled{opacity:.55; cursor:not-allowed; background:#F0EDE7;}
+  .field-thema select.topicSelect{width:100%;}
+  .field-pair{display:contents;}
+  input[type=checkbox]{width:16px; height:16px; accent-color:var(--rust);}
+  .include-group{display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .print-only{display:none;}
+
+  .ma-detail{display:none; padding:14px 14px 16px 42px; border-top:1px solid var(--line); background:var(--panel-soft);}
+  .ma-card.open .ma-detail{display:block;}
+  .detail-label{font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .detail-hint{font-size:11.5px; color:var(--ink-soft); margin:2px 0 10px;}
+  .block-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:8px 18px;}
+  .block-item{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .block-item label{flex:1; display:flex; align-items:center; gap:7px; font-size:13.5px;}
+  .block-item .prioSelect{width:48px; padding:3px 4px; font-size:12.5px; text-align:center;}
+  .block-item .prioSelect:disabled{visibility:hidden;}
+  .avail-label{margin-top:14px;}
+  .avail-grid{display:flex; gap:22px;}
+  .avail-grid label{display:flex; align-items:center; gap:7px; font-size:13.5px;}
+
+  .paten-block{border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); margin-bottom:8px; overflow:hidden;}
+  .paten-block summary{cursor:pointer; padding:12px 16px; font-weight:600; list-style:none;}
+  .paten-block summary::-webkit-details-marker{display:none;}
+  .paten-block summary::before{content:"▸ "; color:var(--ink-soft); font-size:11px;}
+  .paten-block[open] summary::before{content:"▾ ";}
+  .paten-topics{border-top:1px solid var(--line); padding:10px 16px 14px;}
+  .pate-rank-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line);}
+  .pate-rank-row:last-child{border-bottom:none;}
+  .pate-rank-num{font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--ink-soft); min-width:52px;}
+  .pate-rank-name{font-size:13.5px; flex:1;}
+  .pate-rank-row button{border:none; background:none; cursor:pointer; color:var(--ink-soft); font-size:13px; padding:2px 6px; border-radius:999px;}
+  .pate-rank-row button:hover{color:var(--rust);}
+  .pate-empty{color:var(--ink-soft); font-size:12px; padding:6px 0;}
+  .pate-add-row{display:flex; align-items:center; gap:8px; margin-top:8px;}
+  .pate-add-row select{max-width:260px;}
+
+  footer.meta{margin-top:26px; font-size:12px; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:12px;}
+
+  @media print{
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
+    body{padding:0; font-size:12px; background:#fff;}
+    .no-print{display:none !important;}
+    header.top{background:#fff !important; border-bottom:2px solid #000; padding:0 0 10px; margin-bottom:16px;}
+    header.top h1{color:#000 !important;} header.top .sub{color:#333 !important;} .wordmark{color:#000 !important;}
+    .badge-proto{display:none;}
+    select, input[type=checkbox], .ma-toggle .chev, .ma-detail{display:none !important;}
+    .ma-toggle{pointer-events:none;}
+    .print-only{
+      display:inline-block;
+      border:1px solid #999;
+      border-radius:2px;
+      padding:3px 8px;
+      margin-top:2px;
+      background:#F5F3EE;
+      font-weight:600;
+      color:#000;
+    }
+    .field-label{color:#000 !important; font-weight:700;}
+    .ma-card{border:1.5px solid #000; break-inside:avoid; margin-bottom:10px;}
+    .ma-row.excluded{display:none;}
+    .week-tab:not(.active-print){display:none;}
+    .hand-line{border-bottom:1.5px solid #000;}
+    .schicht-tag{border:1px solid #000 !important; background:#EDEDED !important; color:#000 !important;}
+    .frei-tag{font-weight:600; color:#000;}
+    .ansprechpartner{border:1px solid #000 !important; background:#EDEDED !important; color:#000 !important;}
+    .no-print-field, .include-group{display:none !important;}
+    .ma-row{
+      grid-template-columns: 115px 260px 85px 85px 105px !important;
+      column-gap:8px !important;
+      padding:8px 10px !important;
+    }
+    .field-thema{overflow-wrap:break-word;}
+    .ma-toggle .ma-name{white-space:normal !important; overflow:visible !important; text-overflow:clip !important;}
+    .ma-toggle{overflow:visible !important;}
+  }
+  @media screen and (max-width:900px){
+    .ma-row{grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div>
+        <div class="wordmark">HORNBACH</div>
+        <h1>Schulungsplanung – Praxistest<span class="badge-proto">ECHTE DATEN · WB5</span></h1>
+        <div class="sub">Filiale München-Freiham · KW 41–44 (05.10.–01.11.2026) · nur Mo–Do, Freitag/Wochenende kein Schulungstag</div>
+        <div class="no-print">
+          <label class="reload-label" for="matrixFileInput">⟳ Qualifikationsmatrix aktualisieren (Excel hochladen)</label>
+          <input type="file" id="matrixFileInput" accept=".xlsx">
+          <div id="reloadStatus"></div>
+        </div>
+      </div>
+      <div class="actions no-print">
+        <button id="resetBtn">Vorschläge zurücksetzen</button>
+        <button class="primary" onclick="window.print()">Woche drucken</button>
+      </div>
+    </div>
+  </header>
+
+<div class="wrap">
+  <section>
+    <div class="week-tabs" id="weekTabs"></div>
+  </section>
+
+  <section>
+    <h2 id="weekHeading">Verkäufer &amp; Vorschläge</h2>
+    <div id="planList"></div>
+  </section>
+
+  <section class="no-print">
+    <h2>Bereichspaten – Ansprechpartner je Verkaufsbereich</h2>
+    <div class="section-note">Rein manuelle Zuordnung durch den TBL, unabhängig von der Qualifikationsmatrix. Reihenfolge = Rang (Pate 1 zuerst ansprechen).</div>
+    <div id="patenList"></div>
+  </section>
+</div>
+<script>
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const BLOCKS = {"Große Gärtnerei": ["Selbstversorger-Garten (Sämereien, Anzucht, Jungpflanzen, Stecklinge und Gewächshäuser)", "Pflanzenschutz und Pflanzenstärkung", "Dünger und Substrate (Erden, Spezial-Erden)", "Zimmerpflanzen (Wohngesundheit, Cocodama, Bonsai, Gefäße)", "Obstgehölze", "Beerensträucher", "Kräuter", "Gemüse", "Erdbeeren", "Heckenpflanzen (immergrün, nicht grün, Formgehölze, schnellwachsend)", "Ziersträucher und -gehölze", "Rosen und Begleitstauden", "Gräser und Bambus", "Stauden", "Überwinterung von Pflanzen (im Gewächshaus und Kübel)", "Grab, Advent & Weihnachtsbäume", "Beet- und Balkonpflanzen (Frühjahr, Sommer und Herbst)", "Saisonpflanzen (Kübelpflanzen, mediterrane Pflanzen, Gefäße und deren Materialien)"], "Zoo und Aquaristik": ["Warmwasserfische", "Kaltwasserfische inkl. Garnelen und Muscheln", "Aquarium-Beleuchtung (z.B. Neukauf, Umrüstung)", "Futter und Pflege inkl. Aquarientechnik", "Aquarienpflanzen und -deko", "smarte Aquaristik (z.B. Filter, Futter, Beleuchtung)", "Aquascaping", "Hund und Katze (Ernährungsformen; Zubehöre; Smart Pet)", "Teich (Mini-, Balkon-, Terrasse-, Hoch- und Schwimmteich), Pflanzen, Technik [z.B. Filter, Pumpen, Beleuchtung], Pflege [z.B. UV-Klärer, Algenstopp, Winterschutz, Futter], Deko)", "Home Farming - Hühner (Futter, Gehege, Ställe)", "Heimische Wildtiere im Garten (Futter und Behausung [z.B. für Igel und Eichhörnchen], Futter und Nistkästen für Vögel)"], "Gartenfreizeit / Outdoor Living": ["Grills (Holzkohlegrill, Gasgrill, Elektrogrill, Pizzaofen, Grillkamin, Feuerschale, Grillzubehör, Outdoor-Küchenmöbel, Kohle/Briketts, Gas)", "Pools (Aufstellpool, Einbaupool, Außenwhirlpool und Zubehör, Pooltechnik, Poolzubehör, Poolpflege und -reinigung)", "Sonnenschutz (Ampelschirm, Markt-/ Mittelstockschirm, Sonnenschirm für Balkon)", "Gartenmöbel", "Gartenspielgeräte und Fallschutzmatten (zur privaten Nutzung; zur öffentlichen Nutzung [DIN EN 1176])", "Weihnachtsmarkt"], "Gartengeräte und -maschinen & Bewässerung": ["Rasen mähen, trimmen und vertikutieren", "Schneiden im Garten (z. B. Hecken-, Rosenschere, Hochentaster)", "Häkseln", "Laubsammeln", "Kompostieren", "Forstwerkzeuge (z. B. Äxte, Kettensägen)", "Beseitigung von Schnee und Eis", "Automatische Bewässerung", "Smarte Steuerung der Bewässerung", "Urlaubsbewässerung", "Micro Drip", "Kaltwasserleitungen (Bewässerung)", "Entwässerung (z. B. Klarwasser-, Schmutzwasser- und Kombitauchpumpen)", "Bewässerung (z. B. Garten-, Tauchdruck- und Tiefbrunnenpumpen)", "Hauswasserversorgung (z. B. Hauswasserwerk und Hauswasserautomat)", "Regenwasser sammeln: Oberirdisch  inkl. Tonnen und Zubehör", "Regenwasser sammeln: Unterirdisch inkl. Tanks und Zubehör"], "Gartengestaltung": ["Gartenhäuser", "Carports/ Terrassenüberdachungen", "Gartenbereiche abgrenzen", "Hochbeet", "Gewächshäuser", "Terrassenfliesen", "Steine und Kies", "Holzzaun", "Drahtzaun", "WPC-Elemente (Steckzaunsystem)", "Sicherheits- und Doppelstabmattenzaun", "Metallzierzaun", "Kunststoffzaun", "Naturzaun", "HPL- und Glaselemente", "Balkonsichtschutz", "Vorgartenzaun (alle Materialien)", "Betonzaun"], "Heizen und Brennholz": ["Brennholz (Hornbach Forst)", "Pellets", "Briketts"], "Allgemeine Grundlagen": ["Zebra", "WWS", "Zufuhr, Transporter", "Handwerker-Service", "Profi Service", "Kundenreklamation", "Online-Shop", "Warenbereichsspezifische Services", "Konfiguratoren (z.B. Terrassenüberdachung, Metallzäune, Teichfolien)", "Reparaturauftragserstellung"]};
+const BLOCK_NAMES = Object.keys(BLOCKS);
+const REAL_SCORES = {"Große Gärtnerei": {"Selbstversorger-Garten (Sämereien, Anzucht, Jungpflanzen, Stecklinge und Gewächshäuser)": {"5": 1, "6": 1, "7": 2, "8": 2, "9": 3, "10": 1, "11": 3, "12": 2, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Pflanzenschutz und Pflanzenstärkung": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 1, "11": 3, "12": 1, "13": 3, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Dünger und Substrate (Erden, Spezial-Erden)": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 1, "11": 3, "12": 2, "13": 3, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Zimmerpflanzen (Wohngesundheit, Cocodama, Bonsai, Gefäße)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 3, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Obstgehölze": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Beerensträucher": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Kräuter": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Gemüse": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 1, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Erdbeeren": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 1, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Heckenpflanzen (immergrün, nicht grün, Formgehölze, schnellwachsend)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 3, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Ziersträucher und -gehölze": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Rosen und Begleitstauden": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Gräser und Bambus": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Stauden": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 1, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Überwinterung von Pflanzen (im Gewächshaus und Kübel)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 3, "10": 1, "11": 3, "12": 1, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Grab, Advent & Weihnachtsbäume": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 1, "11": 3, "12": 2, "13": 2, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Beet- und Balkonpflanzen (Frühjahr, Sommer und Herbst)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 2, "10": 1, "11": 3, "12": 1, "13": 1, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}, "Saisonpflanzen (Kübelpflanzen, mediterrane Pflanzen, Gefäße und deren Materialien)": {"5": 1, "6": 2, "7": 2, "8": 3, "9": 3, "10": 1, "11": 3, "12": 1, "13": 1, "14": 1, "16": 3, "17": 1, "18": 3, "20": 3}}, "Zoo und Aquaristik": {"Warmwasserfische": {"5": 3, "6": 3, "7": "P", "8": 3, "9": 1, "10": 2, "11": 1, "12": 3, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Kaltwasserfische inkl. Garnelen und Muscheln": {"5": 3, "6": 2, "7": 2, "8": 3, "9": 1, "10": 1, "11": 1, "12": 3, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Aquarium-Beleuchtung (z.B. Neukauf, Umrüstung)": {"5": 3, "6": 2, "7": 3, "8": 2, "9": 1, "10": 2, "11": 1, "12": 1, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Futter und Pflege inkl. Aquarientechnik": {"5": 3, "6": 3, "7": 3, "8": 3, "9": 1, "10": 1, "11": 1, "12": 3, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Aquarienpflanzen und -deko": {"5": 3, "6": 3, "7": 3, "8": 3, "9": 1, "10": 1, "11": 1, "12": 3, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "smarte Aquaristik (z.B. Filter, Futter, Beleuchtung)": {"5": 3, "6": 2, "7": 3, "8": 2, "9": 1, "10": 2, "11": 1, "12": 2, "13": 2, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Aquascaping": {"5": 3, "6": 2, "7": 3, "8": 3, "9": 1, "10": 1, "11": 1, "12": 1, "13": 3, "14": 1, "16": 1, "17": 1, "18": 3, "20": 1}, "Hund und Katze (Ernährungsformen; Zubehöre; Smart Pet)": {"5": 3, "6": 2, "7": 2, "8": 3, "9": 1, "10": 1, "11": 1, "12": 2, "13": 1, "14": 2, "16": 2, "17": 1, "18": 3, "20": 2}, "Teich (Mini-, Balkon-, Terrasse-, Hoch- und Schwimmteich), Pflanzen, Technik [z.B. Filter, Pumpen, Beleuchtung], Pflege [z.B. UV-Klärer, Algenstopp, Winterschutz, Futter], Deko)": {"5": 3, "6": 2, "7": 2, "8": 3, "9": 1, "10": 1, "11": 1, "12": 3, "13": 2, "14": 1, "16": 2, "17": 1, "18": 3, "20": 2}, "Home Farming - Hühner (Futter, Gehege, Ställe)": {"5": 3, "6": 2, "7": 2, "8": 3, "9": 1, "10": 1, "11": 1, "12": 2, "13": 2, "14": 1, "16": 2, "17": 1, "18": 3, "20": 1}, "Heimische Wildtiere im Garten (Futter und Behausung [z.B. für Igel und Eichhörnchen], Futter und Nistkästen für Vögel)": {"5": 3, "6": 3, "7": 3, "8": 3, "9": 2, "10": 1, "11": 1, "12": 2, "13": 2, "14": 1, "16": 2, "17": 2, "18": 3, "20": 2}}, "Gartenfreizeit / Outdoor Living": {"Grills (Holzkohlegrill, Gasgrill, Elektrogrill, Pizzaofen, Grillkamin, Feuerschale, Grillzubehör, Outdoor-Küchenmöbel, Kohle/Briketts, Gas)": {"5": 2, "6": 1, "7": 1, "8": 2, "9": 3, "10": 2, "11": 3, "12": 1, "13": 2, "14": 3, "16": 2, "17": 2, "18": 3, "20": 1}, "Pools (Aufstellpool, Einbaupool, Außenwhirlpool und Zubehör, Pooltechnik, Poolzubehör, Poolpflege und -reinigung)": {"5": 2, "6": 1, "7": 1, "8": 2, "9": 2, "10": 2, "11": 3, "12": 1, "13": 2, "14": 3, "16": 2, "17": 1, "18": 2, "20": 1}, "Sonnenschutz (Ampelschirm, Markt-/ Mittelstockschirm, Sonnenschirm für Balkon)": {"5": 1, "6": 1, "7": 1, "8": 2, "9": 3, "10": 2, "11": 2, "12": 2, "13": 2, "14": 3, "16": 2, "17": 1, "18": 3, "20": 2}, "Gartenmöbel": {"5": 1, "6": 1, "7": 1, "8": 2, "9": 3, "10": 2, "11": 2, "12": 2, "13": 2, "14": 2, "16": 2, "17": 1, "18": 3, "20": 2}, "Gartenspielgeräte und Fallschutzmatten (zur privaten Nutzung; zur öffentlichen Nutzung [DIN EN 1176])": {"5": 1, "6": 1, "7": 1, "8": 2, "9": 2, "10": 2, "11": 2, "12": 3, "13": 2, "14": 1, "16": 2, "17": 2, "18": 3, "20": 2}, "Weihnachtsmarkt": {"5": 1, "6": 2, "7": 2, "8": 2, "9": 3, "10": 2, "11": 2, "12": 2, "13": 2, "14": 2, "16": 2, "17": 1, "18": 3, "20": 3}}, "Gartengeräte und -maschinen & Bewässerung": {"Rasen mähen, trimmen und vertikutieren": {"5": 2, "6": 1, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 3, "16": 1, "17": 2, "18": 3, "20": 3}, "Schneiden im Garten (z. B. Hecken-, Rosenschere, Hochentaster)": {"5": 2, "6": 1, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 3, "16": 1, "17": 2, "18": 3, "20": 3}, "Häkseln": {"5": 2, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 3, "16": 1, "17": 2, "18": 3, "20": 3}, "Laubsammeln": {"5": 2, "6": 1, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 2, "16": 1, "17": 2, "18": 3, "20": 3}, "Kompostieren": {"5": 2, "6": 2, "7": 3, "8": 3, "9": 3, "10": 3, "11": 2, "12": 3, "13": 3, "14": 1, "16": 1, "17": 2, "18": 3, "20": 3}, "Forstwerkzeuge (z. B. Äxte, Kettensägen)": {"5": 2, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 3, "13": 3, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Beseitigung von Schnee und Eis": {"5": 2, "6": 2, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 3, "13": 3, "14": 1, "16": 1, "17": 2, "18": 3, "20": 3}, "Automatische Bewässerung": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Smarte Steuerung der Bewässerung": {"5": 1, "6": 1, "7": 1, "8": 2, "9": 2, "10": 3, "11": 2, "12": 2, "13": 2, "14": 1, "16": 1, "17": 2, "18": 3, "20": 2}, "Urlaubsbewässerung": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Micro Drip": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Kaltwasserleitungen (Bewässerung)": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Entwässerung (z. B. Klarwasser-, Schmutzwasser- und Kombitauchpumpen)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 2, "16": 1, "17": 2, "18": 3, "20": 2}, "Bewässerung (z. B. Garten-, Tauchdruck- und Tiefbrunnenpumpen)": {"5": 1, "6": 1, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 1, "16": 1, "17": 2, "18": 3, "20": 2}, "Hauswasserversorgung (z. B. Hauswasserwerk und Hauswasserautomat)": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 2, "14": 1, "16": 1, "17": 2, "18": 3, "20": 2}, "Regenwasser sammeln: Oberirdisch  inkl. Tonnen und Zubehör": {"5": 1, "6": 2, "7": 3, "8": 3, "9": 3, "10": 3, "11": 2, "12": 2, "13": 3, "14": 2, "16": 3, "17": 2, "18": 3, "20": 3}, "Regenwasser sammeln: Unterirdisch inkl. Tanks und Zubehör": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 2, "10": 3, "11": 2, "12": 2, "13": 1, "14": 1, "16": 1, "17": 2, "18": 3, "20": 3}}, "Gartengestaltung": {"Gartenhäuser": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Carports/ Terrassenüberdachungen": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 2, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Gartenbereiche abgrenzen": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Hochbeet": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 3, "10": 2, "11": 2, "12": "P", "13": 2, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Gewächshäuser": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 3, "10": 2, "11": 2, "12": 2, "13": 2, "14": 1, "16": 2, "17": 2, "18": 3, "20": 3}, "Terrassenfliesen": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Steine und Kies": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Holzzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Drahtzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 2, "16": 22, "17": "P", "18": 3, "20": 3}, "WPC-Elemente (Steckzaunsystem)": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Sicherheits- und Doppelstabmattenzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Metallzierzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 2, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Kunststoffzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 2, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Naturzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "HPL- und Glaselemente": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 1, "14": 1, "16": 2, "17": "P", "18": 3, "20": 3}, "Balkonsichtschutz": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Vorgartenzaun (alle Materialien)": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 3, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Betonzaun": {"5": 1, "6": 1, "7": 1, "8": "P", "9": 2, "10": 2, "11": 2, "12": "P", "13": 1, "14": 1, "16": 1, "17": "P", "18": 3, "20": 2}}, "Heizen und Brennholz": {"Brennholz (Hornbach Forst)": {"5": 1, "6": 1, "7": 1, "8": 3, "9": 1, "10": 2, "11": 2, "12": 3, "13": 2, "14": 1, "16": 2, "17": 3, "18": 3, "20": 1}, "Pellets": {"5": 2, "6": 1, "7": 1, "8": 3, "9": 3, "10": 2, "11": 3, "12": 3, "13": 3, "14": 1, "16": 3, "17": 3, "18": 3, "20": 3}, "Briketts": {"5": 2, "6": 1, "7": 1, "8": 3, "9": 3, "10": 2, "11": 3, "12": 3, "13": 3, "14": 2, "16": 3, "17": 3, "18": 3, "20": 3}}, "Allgemeine Grundlagen": {"Zebra": {"5": 3, "6": 3, "7": 3, "8": 3, "9": 3, "10": 3, "11": 3, "12": 3, "13": 3, "14": 3, "16": 3, "17": 3, "18": 3, "20": 3}, "WWS": {"5": null, "6": 2, "7": null, "8": 3, "9": null, "10": 3, "11": null, "12": 3, "13": 3, "14": 2, "16": null, "17": 3, "18": null, "20": null}, "Zufuhr, Transporter": {"5": 2, "6": 1, "7": 3, "8": 3, "9": 2, "10": 3, "11": 3, "12": 3, "13": 3, "14": 1, "16": 3, "17": 3, "18": 3, "20": 3}, "Handwerker-Service": {"5": 1, "6": 3, "7": 1, "8": "P", "9": 2, "10": 3, "11": 3, "12": "P", "13": 3, "14": 2, "16": 2, "17": "P", "18": 3, "20": 3}, "Profi Service": {"5": 1, "6": 2, "7": 1, "8": 3, "9": 2, "10": 2, "11": 2, "12": 3, "13": 2, "14": 1, "16": 2, "17": 3, "18": 2, "20": 2}, "Kundenreklamation": {"5": 1, "6": 3, "7": 3, "8": 3, "9": 3, "10": 3, "11": 3, "12": 3, "13": 3, "14": 3, "16": 3, "17": 3, "18": 3, "20": 3}, "Online-Shop": {"5": 3, "6": 3, "7": 3, "8": 3, "9": 3, "10": 3, "11": 3, "12": 3, "13": 3, "14": 3, "16": 3, "17": 3, "18": 3, "20": 3}, "Warenbereichsspezifische Services": {"5": 3, "6": 2, "7": 2, "8": 3, "9": 3, "10": 3, "11": 2, "12": 3, "13": 3, "14": 2, "16": 2, "17": 3, "18": 3, "20": 3}, "Konfiguratoren (z.B. Terrassenüberdachung, Metallzäune, Teichfolien)": {"5": 2, "6": 1, "7": 3, "8": 3, "9": 2, "10": 3, "11": 3, "12": 3, "13": 3, "14": 3, "16": 3, "17": 3, "18": 3, "20": 3}, "Reparaturauftragserstellung": {"5": 2, "6": 3, "7": null, "8": 3, "9": null, "10": 3, "11": null, "12": 2, "13": 3, "14": 3, "16": null, "17": 2, "18": null, "20": null}}};
+const EMPLOYEES = [{"id": "2", "name": "Verkäufer 2", "defaultBlocks": [], "dauerkrank": true}, {"id": "5", "name": "Verkäufer 5", "defaultBlocks": ["Allgemeine Grundlagen", "Zoo und Aquaristik", "Gartenfreizeit / Outdoor Living", "Gartengeräte und -maschinen & Bewässerung"], "dauerkrank": false}, {"id": "6", "name": "Verkäufer 6", "defaultBlocks": ["Allgemeine Grundlagen", "Zoo und Aquaristik"], "dauerkrank": false}, {"id": "7", "name": "Verkäufer 7", "defaultBlocks": ["Allgemeine Grundlagen", "Zoo und Aquaristik"], "dauerkrank": false}, {"id": "8", "name": "Verkäufer 8", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengestaltung", "Gartengeräte und -maschinen & Bewässerung", "Zoo und Aquaristik"], "dauerkrank": false}, {"id": "9", "name": "Verkäufer 9", "defaultBlocks": ["Allgemeine Grundlagen", "Große Gärtnerei", "Gartenfreizeit / Outdoor Living"], "dauerkrank": false}, {"id": "10", "name": "Verkäufer 10", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengeräte und -maschinen & Bewässerung", "Gartenfreizeit / Outdoor Living"], "dauerkrank": false}, {"id": "11", "name": "Verkäufer 11", "defaultBlocks": ["Allgemeine Grundlagen", "Große Gärtnerei"], "dauerkrank": false}, {"id": "12", "name": "Verkäufer 12", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengestaltung", "Zoo und Aquaristik"], "dauerkrank": false}, {"id": "13", "name": "Verkäufer 13", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengeräte und -maschinen & Bewässerung", "Gartenfreizeit / Outdoor Living", "Zoo und Aquaristik"], "dauerkrank": false}, {"id": "14", "name": "Verkäufer 14", "defaultBlocks": ["Allgemeine Grundlagen", "Gartenfreizeit / Outdoor Living", "Gartengeräte und -maschinen & Bewässerung"], "dauerkrank": false}, {"id": "16", "name": "Verkäufer 16", "defaultBlocks": ["Allgemeine Grundlagen", "Große Gärtnerei"], "dauerkrank": false}, {"id": "17", "name": "Verkäufer 17", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengestaltung", "Gartengeräte und -maschinen & Bewässerung"], "dauerkrank": false}, {"id": "18", "name": "Verkäufer 18", "defaultBlocks": ["Allgemeine Grundlagen", "Gartengeräte und -maschinen & Bewässerung", "Zoo und Aquaristik", "Gartenfreizeit / Outdoor Living"], "dauerkrank": false}, {"id": "20", "name": "Verkäufer 20", "defaultBlocks": ["Allgemeine Grundlagen", "Große Gärtnerei"], "dauerkrank": false}];
+const SCHEDULE = {"2": [[null, null, null, null], [null, null, null, null], [null, null, null, null], [null, null, null, null]], "5": [[{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}]], "6": [[null, null, {"start": "07:00", "end": "12:30", "pause": 30}, {"start": "07:00", "end": "12:30", "pause": 30}], [null, null, {"start": "07:00", "end": "12:30", "pause": 30}, null], [null, null, {"start": "07:00", "end": "12:30", "pause": 30}, null], [null, null, {"start": "07:00", "end": "12:30", "pause": 30}, null]], "7": [[{"start": "07:00", "end": "12:30", "pause": 30}, {"start": "07:00", "end": "12:30", "pause": 0}, null, null], [{"start": "07:00", "end": "12:30", "pause": 30}, {"start": "07:00", "end": "12:30", "pause": 0}, null, {"start": "07:00", "end": "12:30", "pause": 30}], [{"start": "07:00", "end": "12:30", "pause": 30}, {"start": "07:00", "end": "12:30", "pause": 0}, null, {"start": "07:00", "end": "12:30", "pause": 30}], [{"start": "07:00", "end": "12:30", "pause": 30}, {"start": "07:00", "end": "12:30", "pause": 0}, null, {"start": "07:00", "end": "12:30", "pause": 30}]], "8": [[null, null, null, null], [null, null, null, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null], [null, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}]], "9": [[{"start": "08:00", "end": "16:00", "pause": 60}, {"start": "08:00", "end": "16:00", "pause": 60}, {"start": "08:00", "end": "16:00", "pause": 60}, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null], [null, null, null, null], [null, null, null, null]], "10": [[{"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}]], "11": [[{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}], [null, null, null, null], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}]], "12": [[null, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [null, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null], [{"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}], [null, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "08:00", "end": "16:00", "pause": 60}]], "13": [[{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null]], "14": [[{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}], [null, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null, {"start": "07:00", "end": "15:00", "pause": 60}]], "16": [[{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [null, null, null, null], [null, null, null, null], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, null]], "17": [[null, null, null, null], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [null, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, null, {"start": "12:00", "end": "20:00", "pause": 60}]], "18": [[{"start": "11:30", "end": "20:00", "pause": 60}, {"start": "11:30", "end": "20:00", "pause": 60}, {"start": "11:30", "end": "20:00", "pause": 60}, {"start": "11:30", "end": "20:00", "pause": 60}], [null, null, null, null], [null, null, {"start": "11:30", "end": "20:00", "pause": 60}, {"start": "11:30", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "16:00", "pause": 60}, null, {"start": "07:00", "end": "16:00", "pause": 60}, {"start": "07:00", "end": "16:00", "pause": 60}]], "20": [[{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}], [{"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}, {"start": "12:00", "end": "20:00", "pause": 60}], [{"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}, {"start": "07:00", "end": "15:00", "pause": 60}]]};
+const WEEKS = [
+  {label:"KW 41", range:"05.10.–08.10.", days:["Mo 05.10.","Di 06.10.","Mi 07.10.","Do 08.10."]},
+  {label:"KW 42", range:"12.10.–15.10.", days:["Mo 12.10.","Di 13.10.","Mi 14.10.","Do 15.10."]},
+  {label:"KW 43", range:"19.10.–22.10.", days:["Mo 19.10.","Di 20.10.","Mi 21.10.","Do 22.10."]},
+  {label:"KW 44", range:"26.10.–29.10.", days:["Mo 26.10.","Di 27.10.","Mi 28.10.","Do 29.10."]}
+];
+
+// ---- Zeit-/Schicht-Hilfsfunktionen ----
+function timeToMin(t){ const p=t.split(':').map(Number); return p[0]*60+p[1]; }
+function minToTime(m){ const h=Math.floor(m/60), mm=m%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
+function shiftTimeOptions(shift){
+  if(!shift) return [];
+  const startMin=timeToMin(shift.start), endMin=timeToMin(shift.end);
+  const opts=[];
+  for(let m=startMin; m<=endMin-60; m+=30) opts.push(minToTime(m));
+  return opts;
+}
+const DAY_LABELS = ["Mo","Di","Mi","Do"];
+
+// ---- Wissensstand: aus echter Matrix, null = nicht bewertet ----
+function scoreFor(empId, block, topic){
+  const v = REAL_SCORES[block] && REAL_SCORES[block][topic] ? REAL_SCORES[block][topic][empId] : undefined;
+  return (v === undefined) ? null : v;
+}
+
+function groupedTopics(empId, checkedBlocks){
+  const need=[], refresh=[];
+  for(const block of checkedBlocks){
+    for(const topic of BLOCKS[block]){
+      const s = scoreFor(empId, block, topic);
+      if(s === null) continue; // nicht bewertet -> weder Bedarf noch Auffrischung
+      if(s===1||s===2) need.push({block, topic, score:s});
+      else refresh.push({block, topic, score: s==="P"?4:3, label:s});
+    }
+  }
+  need.sort((a,b)=>a.score-b.score);
+  refresh.sort((a,b)=>a.score-b.score);
+  return {need, refresh};
+}
+
+// Standard-Zuweisung je Woche: Tag = erster verfuegbarer Tag.
+// Uhrzeit bevorzugt IMMER das Idealfenster 11:30-15:30 (beide Schichten im Haus);
+// nur wenn eine Schicht dieses Fenster gar nicht erreicht, wird auf die naechstbeste Zeit ausgewichen.
+const IDEAL_START = timeToMin("11:30"), IDEAL_END = timeToMin("15:30");
+// Eine Schulung dauert eine volle Stunde: zwei Slots ueberschneiden sich, wenn ihr Start
+// weniger als 60 Minuten auseinanderliegt (z.B. 13:00 und 13:30 ueberschneiden sich, 13:00 und 14:00 nicht).
+function timesOverlap(t1, t2){
+  return Math.abs(timeToMin(t1) - timeToMin(t2)) < 60;
+}
+function pickPreferredTime(opts, used){
+  const center = (IDEAL_START+IDEAL_END)/2;
+  const avail = opts.filter(t => !used.some(u => timesOverlap(t,u)));
+  const pool = avail.length ? avail : opts;
+  const sorted = [...pool].sort((a,b)=> Math.abs(timeToMin(a)-center) - Math.abs(timeToMin(b)-center));
+  return sorted[0];
+}
+function computeDefaultAssignments(weekIdx){
+  const dayGroups = {0:[],1:[],2:[],3:[]};
+  const result = {};
+  EMPLOYEES.forEach(emp=>{
+    if(emp.dauerkrank){ result[emp.id]={available:false}; return; }
+    const sched = SCHEDULE[emp.id][weekIdx];
+    const availDays = [0,1,2,3].filter(d => sched[d] !== null);
+    if(availDays.length===0){ result[emp.id]={available:false}; return; }
+    // Lastverteilung: von den fuer diese Person verfuegbaren Tagen den bisher am wenigsten belegten waehlen
+    const day = availDays.reduce((best,d)=> dayGroups[d].length < dayGroups[best].length ? d : best, availDays[0]);
+    dayGroups[day].push(emp);
+    result[emp.id] = {available:true, day};
+  });
+  Object.keys(dayGroups).forEach(dk=>{
+    const day = parseInt(dk);
+    const used = [];
+    dayGroups[day].forEach(emp=>{
+      const shift = SCHEDULE[emp.id][weekIdx][day];
+      const opts = shiftTimeOptions(shift);
+      const time = pickPreferredTime(opts, used);
+      used.push(time);
+      result[emp.id].time = time;
+    });
+  });
+  return result;
+}
+
+let currentWeek = 0;
+let cardRefs = [];
+const listEl = document.getElementById('planList');
+
+function buildCard(emp, weekIdx, defaults){
+  const card = document.createElement('div');
+  card.className = 'ma-card';
+  card.dataset.id = emp.id;
+
+  const sched = SCHEDULE[emp.id][weekIdx];
+  const availDays = [0,1,2,3].filter(d => sched[d] !== null);
+  const locked = emp.dauerkrank || !defaults.available;
+  const lockLabel = emp.dauerkrank ? 'Dauerkrank' : 'nicht verfügbar';
+
+  const dayOptsHtml = availDays.map(d=>{
+    const sh = sched[d];
+    return `<option value="${d}" ${d===defaults.day?'selected':''}>${DAY_LABELS[d]} (${sh.start}\u2013${sh.end} Uhr)</option>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="ma-row">
+      <div class="field-group">
+        <span class="field-label">&nbsp;</span>
+        <button type="button" class="ma-toggle">
+          <span class="chev">▸</span>
+          <span class="ma-name">${esc(emp.name)}</span>
+        </button>
+        <div class="hand-field"><span class="hand-label">Name</span><span class="hand-line"></span></div>
+      </div>
+      <div class="field-group field-schicht no-print-field">
+        <span class="field-label">&nbsp;</span>
+        <span class="schicht-tag ${locked?'aus':''}">${locked ? lockLabel : (sched[defaults.day].start+'–'+sched[defaults.day].end)}</span>
+        <span class="frei-tag">${availDays.length}/4 Tage im Dienst</span>
+      </div>
+
+      <div class="field-group field-thema">
+        <span class="field-label">Thema</span>
+        <select class="topicSelect"></select>
+        <div class="why"></div>
+        <span class="print-only topicPrint"></span>
+        <div class="ansprechpartner"></div>
+      </div>
+
+      <div class="field-pair">
+        <div class="field-group">
+          <span class="field-label">Tag</span>
+          <select class="daySelect">${dayOptsHtml}</select>
+          <span class="print-only dayPrint"></span>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Uhrzeit</span>
+          <select class="timeSelect"></select>
+          <div class="time-warn no-print"></div>
+          <span class="print-only timePrint"></span>
+        </div>
+        <div class="include-group" title="Nur angehakte Zeilen erscheinen im gedruckten Wochenplan">
+          <span class="field-label">Im Plan</span>
+          <input type="checkbox" class="includeBox">
+        </div>
+        <div class="field-group sig-field">
+          <span class="hand-label">Unterschrift</span>
+          <span class="hand-line"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ma-detail">
+      <div class="detail-label">Zugeordnete Themenblöcke</div>
+      <div class="detail-hint">Häkchen = Block relevant. Zahl = Priorität; bei gleichem Wissensstand entscheidet die niedrigere Zahl.</div>
+      <div class="block-grid">
+        ${BLOCK_NAMES.map(b=>`
+          <div class="block-item">
+            <label><input type="checkbox" class="blockBox" value="${esc(b)}" ${emp.defaultBlocks.includes(b)?'checked':''}> ${esc(b)}</label>
+            <select class="prioSelect"></select>
+          </div>
+        `).join('')}
+      </div>
+      <div class="detail-label avail-label">Verfügbarkeit diese Woche</div>
+      <div class="avail-grid">
+        <label><input type="checkbox" class="urlaubBox" ${emp.dauerkrank?'disabled':''}> Urlaub</label>
+        <label><input type="checkbox" class="dauerkrankBox" ${emp.dauerkrank?'checked disabled':''}> Dauerkrank</label>
+      </div>
+    </div>
+  `;
+
+  const toggleBtn = card.querySelector('.ma-toggle');
+  toggleBtn.addEventListener('click', ()=> card.classList.toggle('open'));
+
+  const topicSel = card.querySelector('.topicSelect');
+  const daySel = card.querySelector('.daySelect');
+  const timeSel = card.querySelector('.timeSelect');
+  const includeBox = card.querySelector('.includeBox');
+  const whyEl = card.querySelector('.why');
+  const ansprechpartnerEl = card.querySelector('.ansprechpartner');
+  const row = card.querySelector('.ma-row');
+  const urlaubBox = card.querySelector('.urlaubBox');
+  const dauerkrankBox = card.querySelector('.dauerkrankBox');
+
+  if(locked){
+    [topicSel,daySel,timeSel,includeBox].forEach(el=>el.disabled=true);
+    topicSel.innerHTML = `<option value="">– ${lockLabel} –</option>`;
+    card.querySelector('.block-grid').querySelectorAll('input,select').forEach(el=>el.disabled=true);
+    if(emp.dauerkrank) urlaubBox.disabled = true;
+    row.classList.add('excluded');
+    cardRefs.push({emp, daySel, timeSel, topicSel, includeBox, timeWarn: card.querySelector('.time-warn'), ansprechpartnerEl});
+    return card;
+  }
+
+  function refreshTimeOptions(){
+    const day = parseInt(daySel.value);
+    const shift = sched[day];
+    const opts = shiftTimeOptions(shift);
+    const preferred = defaults.day===day ? defaults.time : pickPreferredTime(opts, []);
+    timeSel.innerHTML = opts.map(t=>`<option value="${t}" ${t===preferred?'selected':''}>${t} Uhr</option>`).join('');
+  }
+
+  const blockItems = [...card.querySelectorAll('.block-item')].map(el=>({
+    el, name: el.querySelector('.blockBox').value,
+    checkbox: el.querySelector('.blockBox'), prioSelect: el.querySelector('.prioSelect'), priority:null
+  }));
+  blockItems.forEach(bi=>{ bi.priority = emp.defaultBlocks.includes(bi.name) ? emp.defaultBlocks.indexOf(bi.name)+1 : null; });
+
+  function renderPriorities(){
+    const checked = blockItems.filter(b=>b.checkbox.checked).sort((a,b)=>(a.priority||99)-(b.priority||99));
+    checked.forEach((b,i)=>b.priority=i+1);
+    blockItems.forEach(b=>{
+      if(b.checkbox.checked){
+        b.prioSelect.disabled=false;
+        b.prioSelect.innerHTML = checked.map((_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+        b.prioSelect.value = b.priority;
+      } else { b.priority=null; b.prioSelect.disabled=true; b.prioSelect.innerHTML=''; }
+    });
+  }
+  renderPriorities();
+
+  function orderedCheckedBlocks(){
+    return blockItems.filter(b=>b.checkbox.checked).sort((a,b)=>a.priority-b.priority).map(b=>b.name);
+  }
+
+  blockItems.forEach(bi=>{
+    bi.checkbox.addEventListener('change', ()=>{
+      if(bi.checkbox.checked){
+        const maxP = Math.max(0, ...blockItems.filter(x=>x!==bi&&x.checkbox.checked).map(x=>x.priority||0));
+        bi.priority = maxP+1;
+      } else bi.priority=null;
+      renderPriorities(); refreshTopics();
+    });
+    bi.prioSelect.addEventListener('change', ()=>{
+      const newVal = parseInt(bi.prioSelect.value,10);
+      const swap = blockItems.find(x=>x!==bi&&x.checkbox.checked&&x.priority===newVal);
+      if(swap) swap.priority = bi.priority;
+      bi.priority = newVal;
+      renderPriorities(); refreshTopics();
+    });
+  });
+
+  function refreshTopics(){
+    if(urlaubBox.checked || dauerkrankBox.checked){
+      const label = urlaubBox.checked ? 'Urlaub' : 'Dauerkrank';
+      topicSel.innerHTML = `<option value="">– ${label}, keine Schulung diese Woche –</option>`;
+      whyEl.textContent = `${label} – diese Woche nicht verfügbar`;
+      includeBox.checked=false;
+      topicSel.disabled=daySel.disabled=timeSel.disabled=includeBox.disabled=true;
+      syncPrint(); return;
+    }
+    topicSel.disabled=daySel.disabled=timeSel.disabled=includeBox.disabled=false;
+
+    const checked = orderedCheckedBlocks();
+    const {need, refresh} = groupedTopics(emp.id, checked);
+    const proposal = need[0] || null;
+
+    if(need.length===0 && refresh.length===0){
+      topicSel.innerHTML = `<option value="">– kein bewertetes Thema in gewählten Blöcken –</option>`;
+      whyEl.textContent=''; includeBox.checked=false;
+    } else {
+      const optHtml = o => `<option value="${esc(o.block)}||${esc(o.topic)}" ${proposal&&o.topic===proposal.topic&&o.block===proposal.block?'selected':''}>${esc(o.topic)} — ${esc(o.block)} (${o.label||o.score})</option>`;
+      let html='';
+      if(need.length) html += `<optgroup label="Empfohlen (Nachholbedarf)">${need.map(optHtml).join('')}</optgroup>`;
+      if(refresh.length) html += `<optgroup label="Bereits gut / Auffrischung">${refresh.map(optHtml).join('')}</optgroup>`;
+      if(!proposal) html = `<option value="" selected>– Thema wählen (kein akuter Bedarf) –</option>` + html;
+      topicSel.innerHTML = html;
+      whyEl.textContent = proposal ? `größte Lücke: Wissensstand ${proposal.score}` : 'kein akuter Nachholbedarf – Auffrischung optional wählbar';
+      includeBox.checked = !!proposal;
+    }
+    syncPrint();
+  }
+
+  function syncPrint(){
+    card.querySelector('.topicPrint').textContent = topicSel.selectedOptions[0]?.textContent || "–";
+    card.querySelector('.dayPrint').textContent = DAY_LABELS[parseInt(daySel.value)] || '–';
+    card.querySelector('.timePrint').textContent = timeSel.value ? timeSel.value+' Uhr' : '–';
+    row.classList.toggle('excluded', !includeBox.checked);
+    const parts = (topicSel.value||'').split('||');
+    ansprechpartnerEl.textContent = parts[0] ? ansprechpartnerText(parts[0]) : '';
+    checkConflicts();
+  }
+
+  daySel.addEventListener('change', ()=>{ refreshTimeOptions(); syncPrint(); });
+  [topicSel, timeSel, includeBox].forEach(el=>el.addEventListener('change', syncPrint));
+  urlaubBox.addEventListener('change', ()=>{ if(urlaubBox.checked) dauerkrankBox.checked=false; refreshTopics(); });
+  dauerkrankBox.addEventListener('change', ()=>{ if(dauerkrankBox.checked) urlaubBox.checked=false; refreshTopics(); });
+
+  refreshTimeOptions();
+  refreshTopics();
+  cardRefs.push({emp, daySel, timeSel, topicSel, includeBox, timeWarn: card.querySelector('.time-warn'), ansprechpartnerEl});
+  return card;
+}
+
+function checkConflicts(){
+  cardRefs.forEach(ref=>{
+    ref.timeWarn.textContent='';
+    ref.timeSel.classList.remove('conflict');
+  });
+  const byDay = {};
+  cardRefs.forEach(ref=>{
+    if(ref.includeBox.disabled || !ref.includeBox.checked) return;
+    const day = ref.daySel.value;
+    (byDay[day]=byDay[day]||[]).push(ref);
+  });
+  Object.values(byDay).forEach(refs=>{
+    refs.forEach(ref=>{
+      const conflicts = refs.filter(r => r!==ref && timesOverlap(r.timeSel.value, ref.timeSel.value));
+      if(conflicts.length){
+        const others = conflicts.map(r=>r.emp.name).join(', ');
+        ref.timeWarn.textContent = `⚠ Überschneidet sich mit ${others} (je 1 Std. Slot)`;
+        ref.timeSel.classList.add('conflict');
+      }
+    });
+  });
+}
+
+function renderWeek(weekIdx){
+  currentWeek = weekIdx;
+  document.getElementById('weekHeading').textContent = `Verkäufer & Vorschläge – ${WEEKS[weekIdx].label} (${WEEKS[weekIdx].range})`;
+  listEl.innerHTML='';
+  cardRefs=[];
+  const defaults = computeDefaultAssignments(weekIdx);
+  EMPLOYEES.forEach(emp => listEl.appendChild(buildCard(emp, weekIdx, defaults[emp.id])));
+  checkConflicts();
+  refreshAllAnsprechpartner();
+  [...document.querySelectorAll('.week-tab')].forEach((t,i)=>t.classList.toggle('active', i===weekIdx));
+}
+
+function buildWeekTabs(){
+  const wrap = document.getElementById('weekTabs');
+  wrap.innerHTML = WEEKS.map((w,i)=>`<button type="button" class="week-tab" data-i="${i}">${w.label}<span class="wt-range">${w.range}</span></button>`).join('');
+  [...wrap.querySelectorAll('.week-tab')].forEach((btn,i)=>btn.addEventListener('click', ()=>renderWeek(i)));
+}
+document.getElementById('resetBtn').addEventListener('click', ()=>renderWeek(currentWeek));
+
+// ---- Bereichspaten (7 echte Bereiche, komplett manuell) ----
+let patenAssignments = {};
+function seedPatenAssignments(){ BLOCK_NAMES.forEach(b=>{ patenAssignments[b]=[]; }); }
+function ansprechpartnerText(block){
+  const names = patenAssignments[block]||[];
+  if(names.length===0) return '';
+  return 'Ansprechpartner: ' + names.map((n,i)=>`${i+1}. ${n}`).join(' · ');
+}
+function refreshAllAnsprechpartner(){
+  cardRefs.forEach(ref=>{
+    const parts=(ref.topicSel.value||'').split('||');
+    ref.ansprechpartnerEl.textContent = parts[0] ? ansprechpartnerText(parts[0]) : '';
+  });
+}
+function buildPatenSection(){
+  const list = document.getElementById('patenList');
+  list.innerHTML='';
+  BLOCK_NAMES.forEach(block=>{
+    const details=document.createElement('details');
+    details.className='paten-block';
+    const summary=document.createElement('summary');
+    summary.textContent=block;
+    details.appendChild(summary);
+    const wrap=document.createElement('div');
+    wrap.className='paten-topics';
+    wrap.innerHTML=`<div class="pate-rank-list"></div><div class="pate-add-row"><select class="pateAddSelect"></select></div>`;
+    details.appendChild(wrap);
+    list.appendChild(details);
+    const rankListEl=wrap.querySelector('.pate-rank-list');
+    const addSel=wrap.querySelector('.pateAddSelect');
+    function renderRankList(){
+      const arr=patenAssignments[block]||[];
+      rankListEl.innerHTML = arr.length ? arr.map((name,idx)=>`
+        <div class="pate-rank-row" data-name="${esc(name)}">
+          <span class="pate-rank-num">Pate ${idx+1}</span>
+          <span class="pate-rank-name">${esc(name)}</span>
+          <button type="button" title="entfernen">✕</button>
+        </div>`).join('') : '<div class="pate-empty">noch kein Pate hinterlegt</div>';
+      rankListEl.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const name=btn.parentElement.dataset.name;
+          patenAssignments[block]=(patenAssignments[block]||[]).filter(n=>n!==name);
+          renderRankList(); renderAddOptions(); refreshAllAnsprechpartner();
+        });
+      });
+    }
+    function renderAddOptions(){
+      const arr=patenAssignments[block]||[];
+      const avail=EMPLOYEES.filter(e=>!e.dauerkrank && !arr.includes(e.name));
+      addSel.innerHTML = `<option value="">+ weiteren Paten hinzufügen …</option>` + avail.map(e=>`<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('');
+    }
+    addSel.addEventListener('change', ()=>{
+      if(!addSel.value) return;
+      patenAssignments[block]=[...(patenAssignments[block]||[]), addSel.value];
+      addSel.value=''; renderRankList(); renderAddOptions(); refreshAllAnsprechpartner();
+    });
+    renderRankList(); renderAddOptions();
+  });
+}
+
+// ---- Live-Reload der Qualifikationsmatrix aus Excel ----
+const BLOCK_ROW_RANGES = [
+  ["Große Gärtnerei", 4, 21],
+  ["Zoo und Aquaristik", 24, 34],
+  ["Gartenfreizeit / Outdoor Living", 37, 42],
+  ["Gartengeräte und -maschinen & Bewässerung", 45, 61],
+  ["Gartengestaltung", 64, 83],
+  ["Heizen und Brennholz", 86, 88],
+  ["Allgemeine Grundlagen", 91, 100]
+];
+document.getElementById('matrixFileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('reloadStatus');
+  statusEl.textContent = 'Lese Datei ein …';
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const wb = XLSX.read(evt.target.result, {type:'array'});
+      const ws = wb.Sheets['Tabelle1'] || wb.Sheets[wb.SheetNames[0]];
+      const grid = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+      // Zeile 2 (Index 1) enthaelt Spalte->Mitarbeiter-Zuordnung ab Spalte C (Index 2 bzw. B=1)
+      const headerRow = grid[1] || [];
+      const colToEmp = {};
+      for(let c=1; c<headerRow.length; c++){
+        const v = headerRow[c];
+        if(v && v!==0) colToEmp[c] = String(v);
+      }
+      let updated = 0;
+      BLOCK_ROW_RANGES.forEach(([block, r1, r2])=>{
+        for(let r=r1; r<=r2; r++){
+          const row = grid[r-1];
+          if(!row) continue;
+          const topic = row[0];
+          if(!topic || !REAL_SCORES[block] || !(String(topic).trim() in REAL_SCORES[block])) continue;
+          const topicKey = String(topic).trim();
+          Object.keys(colToEmp).forEach(c=>{
+            const empId = colToEmp[c];
+            if(REAL_SCORES[block][topicKey].hasOwnProperty(empId)){
+              const val = row[parseInt(c)];
+              REAL_SCORES[block][topicKey][empId] = (val===null||val===undefined||val==='') ? null : val;
+              updated++;
+            }
+          });
+        }
+      });
+      statusEl.textContent = `Matrix aktualisiert (${updated} Zellen eingelesen). Vorschläge werden neu berechnet …`;
+      renderWeek(currentWeek);
+      setTimeout(()=>{ statusEl.textContent=''; }, 6000);
+    }catch(err){
+      statusEl.textContent = 'Fehler beim Einlesen: ' + err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+buildWeekTabs();
+seedPatenAssignments();
+buildPatenSection();
+renderWeek(0);
+</script>
+</body>
+</html>
